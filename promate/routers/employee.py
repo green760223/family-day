@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from promate.models.employee import Employee
+from models.employee import Employee
 
 router = APIRouter()
 
