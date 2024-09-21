@@ -1,9 +1,12 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from database import database
 from routers.employee import router as employee_router
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -15,9 +18,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI()
 
-app.include_router(employee_router, prefix="/api/v1/employees")
+app.include_router(employee_router, prefix="/api/v1/employee")
 
 
-@app.get("/")
+@app.get("/health-check")
 async def health_check():
     return "The API service is running!"
