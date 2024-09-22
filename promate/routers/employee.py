@@ -1,5 +1,9 @@
+import base64
+import json
 import logging
+from io import BytesIO
 
+import qrcode
 from fastapi import APIRouter, HTTPException, status
 
 from database import database, employee_table
@@ -8,6 +12,43 @@ from models.employee import EmployeeCreate, EmployeeResponse
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# Create a QR code for the employee
+def generate_qr_code(employee_data: EmployeeCreate):
+
+    minimal_employee_data = {
+        "name": employee_data["name"],
+        "department": employee_data["department"],
+        "employee_id": employee_data["employee_id"],
+        "family_count": employee_data["family_count"],
+        "checked_in": employee_data["checked_in"],
+    }
+
+    data = json.dumps(minimal_employee_data, ensure_ascii=False)
+    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/employee_qr_001.png"
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    # Create an image from the QR Code instance
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(file_path)
+
+    # Convert the image to a base64 string
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    return img_str
 
 
 @router.post(
@@ -21,6 +62,9 @@ async def create_employee(employee: EmployeeCreate):
         department=employee.department,
         employee_id=employee.employee_id,
         family_count=employee.family_count,
+        checked_in=employee.checked_in,
+        is_deleted=employee.is_deleted,
+        qr_code=generate_qr_code(employee.model_dump()),
     )
     last_record_id = await database.execute(query)
 
