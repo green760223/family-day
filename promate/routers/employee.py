@@ -1,7 +1,6 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy.sql import select
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeResponse
