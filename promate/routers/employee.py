@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+from datetime import datetime
 from io import BytesIO
 
 import qrcode
@@ -25,8 +26,11 @@ def generate_qr_code(employee_data: EmployeeCreate):
         "checked_in": employee_data["checked_in"],
     }
 
+    base_url = "http://127.0.0.1:8000/api/v1/employee/{employee_id}/check-in"
+    check_in_url = base_url.format(employee_id=employee_data["employee_id"])
+
     data = json.dumps(minimal_employee_data, ensure_ascii=False)
-    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/employee_qr_001.png"
+    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/qr_code_{employee_data['employee_id']}.png"
 
     qr = qrcode.QRCode(
         version=1,
@@ -35,7 +39,8 @@ def generate_qr_code(employee_data: EmployeeCreate):
         border=4,
     )
 
-    qr.add_data(data)
+    # qr.add_data(data)
+    qr.add_data(check_in_url)
     qr.make(fit=True)
 
     # Create an image from the QR Code instance
@@ -96,3 +101,27 @@ async def get_employee(employee_id: str):
         )
 
     return EmployeeResponse(**employee)
+
+
+# Check in an employee
+@router.post("/{employee_id}/check-in", response_model=EmployeeResponse)
+async def check_in_employee(employee_id: str):
+    # employee_id = employee_data.employee_id
+    query = employee_table.select().where(employee_table.c.employee_id == employee_id)
+    employee = await database.fetch_one(query)
+
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found"
+        )
+
+    update_query = (
+        employee_table.update()
+        .where(employee_table.c.employee_id == employee_id)
+        .values(checked_in=True, checked_in_time=datetime.now())
+    )
+    await database.execute(update_query)
+
+    updated_employee = await database.fetch_one(query)
+
+    return EmployeeResponse(**updated_employee)
