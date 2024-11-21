@@ -6,3 +6,6 @@ sqlalchemy
 databases[aiosqlite]
 pydantic-settings
 qrcode[pil]
+python-jose
+python-multipart
+passlib[bcrypt]

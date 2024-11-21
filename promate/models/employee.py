@@ -6,17 +6,17 @@ from pydantic import BaseModel
 
 class EmployeeCreate(BaseModel):
     name: str
-    department: str
-    employee_id: str
-    family_count: int = 0
-    checked_in: bool = False
+    mobile: str
+    family_employee: int = 1
+    family_infant: Optional[int] = None
+    family_child: Optional[int] = None
+    family_adult: Optional[int] = None
+    family_elderly: Optional[int] = None
+    is_checked: bool = False
     is_deleted: bool = False
     qr_code: Optional[str] = None
 
 
 class EmployeeResponse(EmployeeCreate):
     id: int
-    qr_code: Optional[str] = None
-    checked_in: bool = False
     checked_in_time: Optional[datetime] = None
-    is_deleted: bool = False
