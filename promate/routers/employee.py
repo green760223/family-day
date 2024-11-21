@@ -109,9 +109,9 @@ async def get_employee(employee_id: str):
 
 # Check in an employee
 @router.post("/{employee_id}/check-in", response_model=EmployeeResponse)
-async def check_in_employee(employee_id: str):
+async def check_in_employee(mobile: str):
     # employee_id = employee_data.employee_id
-    query = employee_table.select().where(employee_table.c.employee_id == employee_id)
+    query = employee_table.select().where(employee_table.c.mobile == mobile)
     employee = await database.fetch_one(query)
 
     if not employee:
@@ -121,8 +121,8 @@ async def check_in_employee(employee_id: str):
 
     update_query = (
         employee_table.update()
-        .where(employee_table.c.employee_id == employee_id)
-        .values(checked_in=True, checked_in_time=datetime.now())
+        .where(employee_table.c.mobile == mobile)
+        .values(is_checked=True, checked_in_time=datetime.now())
     )
     await database.execute(update_query)
 
