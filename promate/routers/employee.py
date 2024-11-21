@@ -20,10 +20,12 @@ def generate_qr_code(employee_data: EmployeeCreate):
 
     minimal_employee_data = {
         "name": employee_data["name"],
-        "department": employee_data["department"],
-        "employee_id": employee_data["employee_id"],
-        "family_count": employee_data["family_count"],
-        "checked_in": employee_data["checked_in"],
+        "family_employee": employee_data["family_employee"],
+        "family_infant": employee_data["family_infant"],
+        "family_child": employee_data["family_child"],
+        "family_adult": employee_data["family_adult"],
+        "family_elderly": employee_data["family_elderly"],
+        "is_checked": employee_data["is_checked"],
     }
 
     base_url = "http://127.0.0.1:8000/api/v1/employee/{employee_id}/check-in"
@@ -64,10 +66,12 @@ def generate_qr_code(employee_data: EmployeeCreate):
 async def create_employee(employee: EmployeeCreate):
     query = employee_table.insert().values(
         name=employee.name,
-        department=employee.department,
-        employee_id=employee.employee_id,
-        family_count=employee.family_count,
-        checked_in=employee.checked_in,
+        mobile=employee.mobile,
+        family_employee=employee.family_employee,
+        family_infant=employee.family_infant,
+        family_child=employee.family_child,
+        family_adult=employee.family_adult,
+        is_checked=employee.is_checked,
         is_deleted=employee.is_deleted,
         qr_code=generate_qr_code(employee.model_dump()),
     )
