@@ -12,6 +12,7 @@ class EmployeeCreate(BaseModel):
     family_child: Optional[int] = None
     family_adult: Optional[int] = None
     family_elderly: Optional[int] = None
+    group: Optional[int] = None
     is_checked: bool = False
     is_deleted: bool = False
     qr_code: Optional[str] = None

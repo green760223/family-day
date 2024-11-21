@@ -25,6 +25,7 @@ def generate_qr_code(employee_data: EmployeeCreate):
         "family_child": employee_data["family_child"],
         "family_adult": employee_data["family_adult"],
         "family_elderly": employee_data["family_elderly"],
+        "group": employee_data["group"],
         "is_checked": employee_data["is_checked"],
     }
 
@@ -71,6 +72,7 @@ async def create_employee(employee: EmployeeCreate):
         family_infant=employee.family_infant,
         family_child=employee.family_child,
         family_adult=employee.family_adult,
+        group=employee.group,
         is_checked=employee.is_checked,
         is_deleted=employee.is_deleted,
         qr_code=generate_qr_code(employee.model_dump()),
