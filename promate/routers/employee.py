@@ -30,11 +30,11 @@ def generate_qr_code(employee_data: EmployeeCreate):
         "is_checked": employee_data["is_checked"],
     }
 
-    base_url = "http://127.0.0.1:8000/api/v1/employee/{employee_id}/check-in"
-    check_in_url = base_url.format(employee_id=employee_data["employee_id"])
+    base_url = "http://127.0.0.1:8000/api/v1/employee/{mobile}/check-in"
+    check_in_url = base_url.format(mobile=employee_data["mobile"])
 
     data = json.dumps(minimal_employee_data, ensure_ascii=False)
-    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/qr_code_{employee_data['employee_id']}.png"
+    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/qr_code_{employee_data['mobile']}.png"
 
     qr = qrcode.QRCode(
         version=1,
@@ -98,8 +98,8 @@ async def get_all_employees():
 
 
 @router.get("/{employee_id}", response_model=EmployeeResponse)
-async def get_employee(employee_id: str):
-    query = employee_table.select().where(employee_table.c.employee_id == employee_id)
+async def get_employee(mobile: str):
+    query = employee_table.select().where(employee_table.c.mobile == mobile)
     employee = await database.fetch_one(query)
 
     if not employee:
@@ -111,7 +111,7 @@ async def get_employee(employee_id: str):
 
 
 # Check in an employee
-@router.post("/{employee_id}/check-in", response_model=EmployeeResponse)
+@router.post("/{mobile}/check-in", response_model=EmployeeResponse)
 async def check_in_employee(mobile: str):
     # employee_id = employee_data.employee_id
     query = employee_table.select().where(employee_table.c.mobile == mobile)
