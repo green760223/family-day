@@ -73,6 +73,7 @@ async def create_employee(employee: EmployeeCreate):
         family_infant=employee.family_infant,
         family_child=employee.family_child,
         family_adult=employee.family_adult,
+        family_elderly=employee.family_elderly,
         group=employee.group,
         is_checked=employee.is_checked,
         is_deleted=employee.is_deleted,
