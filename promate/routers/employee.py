@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeResponse
+from security import authenticate_user, create_access_token
 
 logger = logging.getLogger(__name__)
 
@@ -131,3 +132,11 @@ async def check_in_employee(mobile: str):
     updated_employee = await database.fetch_one(query)
 
     return EmployeeResponse(**updated_employee)
+
+
+@router.post("/token")
+async def login(employee: EmployeeCreate):
+    employee = await authenticate_user(employee.mobile)
+    access_token = create_access_token(employee.mobile)
+
+    return {"access_token": access_token, "token_type": "bearer"}
