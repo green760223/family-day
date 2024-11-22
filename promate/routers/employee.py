@@ -19,21 +19,21 @@ router = APIRouter()
 # Create a QR code for the employee
 def generate_qr_code(employee_data: EmployeeCreate):
 
-    minimal_employee_data = {
-        "name": employee_data["name"],
-        "family_employee": employee_data["family_employee"],
-        "family_infant": employee_data["family_infant"],
-        "family_child": employee_data["family_child"],
-        "family_adult": employee_data["family_adult"],
-        "family_elderly": employee_data["family_elderly"],
-        "group": employee_data["group"],
-        "is_checked": employee_data["is_checked"],
-    }
+    # minimal_employee_data = {
+    #     "name": employee_data["name"],
+    #     "family_employee": employee_data["family_employee"],
+    #     "family_infant": employee_data["family_infant"],
+    #     "family_child": employee_data["family_child"],
+    #     "family_adult": employee_data["family_adult"],
+    #     "family_elderly": employee_data["family_elderly"],
+    #     "group": employee_data["group"],
+    #     "is_checked": employee_data["is_checked"],
+    # }
 
     base_url = "http://127.0.0.1:8000/api/v1/employee/{mobile}/check-in"
     check_in_url = base_url.format(mobile=employee_data["mobile"])
 
-    data = json.dumps(minimal_employee_data, ensure_ascii=False)
+    # data = json.dumps(minimal_employee_data, ensure_ascii=False)
     file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/qr_code_{employee_data['mobile']}.png"
 
     qr = qrcode.QRCode(
