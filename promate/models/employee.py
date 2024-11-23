@@ -24,3 +24,7 @@ class EmployeeResponse(EmployeeCreate):
     is_checked: bool
     mobile: str
     checked_in_time: Optional[datetime] = None
+
+
+class EmployeeIn(BaseModel):
+    mobile: str

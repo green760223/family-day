@@ -27,7 +27,7 @@ def access_token_expire_minutes() -> int:
 
 def create_access_token(mobile: str):
     logger.debug("Creating access token", mobile={"mobile": mobile})
-    expire = datetime.datetime.now(datetime.utc) + datetime.timedelta(
+    expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
     jwt_data = {"sub": mobile, "exp": expire}

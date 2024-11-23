@@ -8,7 +8,7 @@ import qrcode
 from fastapi import APIRouter, HTTPException, status
 
 from database import database, employee_table
-from models.employee import EmployeeCreate, EmployeeResponse
+from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
 from security import authenticate_user, create_access_token
 
 logger = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ async def check_in_employee(mobile: str):
 
 
 @router.post("/token")
-async def login(employee: EmployeeCreate):
+async def login(employee: EmployeeIn):
     employee = await authenticate_user(employee.mobile)
     access_token = create_access_token(employee.mobile)
 
