@@ -98,7 +98,7 @@ async def get_all_employees():
     return [EmployeeResponse(**employee) for employee in employees]
 
 
-@router.get("/{employee_id}", response_model=EmployeeResponse)
+@router.get("/{mobile}", response_model=EmployeeResponse)
 async def get_employee(mobile: str):
     query = employee_table.select().where(employee_table.c.mobile == mobile)
     employee = await database.fetch_one(query)
