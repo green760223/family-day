@@ -1,10 +1,12 @@
 import datetime
 import logging
 import os
+from typing import Annotated
 
 from dotenv import load_dotenv
-from fastapi import HTTPException, status
-from jose import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import ExpiredSignatureError, JWTError, jwt
 
 from database import database, employee_table
 
@@ -14,10 +16,13 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 ACCESS_TOKEN_EXPIRE_MINUTES = 10
 
 credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
 )
 
 
@@ -53,3 +58,28 @@ async def authenticate_user(mobile: str):
         raise credentials_exception
 
     return user
+
+
+async def get_current_employee(token: Annotated[str, Depends(oauth2_scheme)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        mobile: str = payload.get("sub")
+
+        if mobile is None:
+            raise credentials_exception
+
+    except ExpiredSignatureError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+
+    except JWTError as e:
+        raise credentials_exception from e
+
+    employee = await get_user(mobile=mobile)
+
+    if employee is None:
+        raise credentials_exception
+    return employee

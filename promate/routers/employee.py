@@ -3,13 +3,14 @@ import json
 import logging
 from datetime import datetime
 from io import BytesIO
+from typing import Annotated
 
 import qrcode
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
-from security import authenticate_user, create_access_token
+from security import authenticate_user, create_access_token, get_current_employee
 
 logger = logging.getLogger(__name__)
 
@@ -112,10 +113,15 @@ async def get_employee(mobile: str):
 
 
 # Check in an employee
-@router.post("/{mobile}/check-in", response_model=EmployeeResponse)
-async def check_in_employee(mobile: str):
-    # employee_id = employee_data.employee_id
-    query = employee_table.select().where(employee_table.c.mobile == mobile)
+@router.post("/{mobile}/check-in", response_model=EmployeeResponse, status_code=200)
+async def check_in_employee(
+    mobile: str,
+    current_employee: Annotated[EmployeeIn, Depends(get_current_employee)],
+):
+
+    query = employee_table.select().where(
+        employee_table.c.mobile == current_employee.mobile
+    )
     employee = await database.fetch_one(query)
 
     if not employee:
@@ -125,7 +131,7 @@ async def check_in_employee(mobile: str):
 
     update_query = (
         employee_table.update()
-        .where(employee_table.c.mobile == mobile)
+        .where(employee_table.c.mobile == current_employee.mobile)
         .values(is_checked=True, checked_in_time=datetime.now())
     )
     await database.execute(update_query)
