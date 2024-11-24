@@ -8,7 +8,6 @@ import pandas as pd
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlalchemy import insert
-from starlette import status
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
@@ -176,6 +175,11 @@ async def check_in_employee(
     mobile: str,
     current_employee: Annotated[EmployeeIn, Depends(get_current_employee)],
 ):
+    if mobile != current_employee.mobile:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to check in this employee",
+        )
 
     query = employee_table.select().where(
         employee_table.c.mobile == current_employee.mobile
