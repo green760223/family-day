@@ -1,12 +1,14 @@
 import base64
-import json
 import logging
 from datetime import datetime
 from io import BytesIO
 from typing import Annotated
 
+import pandas as pd
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from sqlalchemy import insert
+from starlette import status
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
@@ -59,6 +61,62 @@ def generate_qr_code(employee_data: EmployeeCreate):
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
     return img_str
+
+
+@router.post(
+    "/batch-create-employees",
+    response_model=str,
+    status_code=status.HTTP_201_CREATED,
+)
+async def batch_create_employees(file: UploadFile):
+    # Read the uploaded CSV file
+    try:
+        df = pd.read_csv(file.file, dtype={"mobile": str})
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Failed to process the uploaded file: {str(e)}"
+        )
+
+    # Check if the required columns are present
+    required_columns = {
+        "name",
+        "mobile",
+        "group",
+        "family_employee",
+        "family_infant",
+        "family_child",
+        "family_adult",
+        "family_elderly",
+    }
+    if not required_columns.issubset(df.columns):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required columns. Required: {required_columns}",
+        )
+
+    # Read the CSV file and create a list of employee data
+    employees = []
+    for _, row in df.iterrows():
+        employee_data = {
+            "name": row["name"],
+            "mobile": row["mobile"],
+            "group": row["group"],
+            "family_employee": row["family_employee"],
+            "family_infant": row["family_infant"],
+            "family_child": row["family_child"],
+            "family_adult": row["family_adult"],
+            "family_elderly": row["family_elderly"],
+            "is_checked": False,
+            "is_deleted": False,
+            "qr_code": generate_qr_code(row.to_dict()),
+        }
+        employees.append(employee_data)
+
+    # Insert the employee data into the database
+    query = insert(employee_table).values(employees)
+    await database.execute(query)
+
+    return "Batch employees data insert successfully"
 
 
 @router.post(
