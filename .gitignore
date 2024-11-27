@@ -9,4 +9,5 @@ venv
 .vscode/
 *.png
 *.log
-.vercel
+*.sqlite3
+.pytest_cache/
