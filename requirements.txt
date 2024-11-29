@@ -3,7 +3,9 @@ uvicorn[standard]
 ruff
 python-dotenv
 sqlalchemy
+psycopg2
 databases[aiosqlite]
+databases[asyncpg]
 pydantic-settings
 qrcode[pil]
 python-jose
