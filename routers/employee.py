@@ -37,7 +37,7 @@ def generate_qr_code(employee_data: EmployeeCreate):
 
     # data = json.dumps(minimal_employee_data, ensure_ascii=False)
     file_path = f"qrcodes/qr_code_{employee_data['mobile']}.png"
-    render_file_path = f"/opt/render/project/src/qrcodes/qr_code_{employee_data['mobile']}.png"
+    render_file_path = f"/qrcodes/qr_code_{employee_data['mobile']}.png"
     
     
 
