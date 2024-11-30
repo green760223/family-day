@@ -23,8 +23,8 @@ app.include_router(employee_router, prefix="/api/v1/employee")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允許所有來源，這對於開發環境很有用
-    allow_credentials=False,
+    allow_origins=["http://localhost:5173"],  # 允許所有來源，這對於開發環境很有用
+    allow_credentials=True,
     allow_methods=["*"],  # 允許所有 HTTP 方法
     allow_headers=["*"],  # 允許所有 HTTP 標頭
 )
