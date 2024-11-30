@@ -3,7 +3,7 @@ uvicorn[standard]
 ruff
 python-dotenv
 sqlalchemy
-psycopg2
+psycopg2-binary
 databases[aiosqlite]
 databases[asyncpg]
 pydantic-settings
@@ -12,3 +12,4 @@ python-jose
 python-multipart
 passlib[bcrypt]
 pandas
+starlette
