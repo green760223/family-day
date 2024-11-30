@@ -28,7 +28,7 @@ engine = sqlalchemy.create_engine(config.DATABASE_URL, connect_args=connect_args
 
 metadata.create_all(engine)
 
-db_args = {"min_size": 1, "max_size": 100} if "postgres" in config.DATABASE_URL else {}
+db_args = {"min_size": 5, "max_size": 80} if "postgres" in config.DATABASE_URL else {}
 database = databases.Database(
     config.DATABASE_URL, force_rollback=config.DB_FORCE_ROLLBACK, **db_args
 )
