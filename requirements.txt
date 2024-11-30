@@ -3,7 +3,7 @@ uvicorn[standard]
 ruff
 python-dotenv
 sqlalchemy
-psycopg2-binary
+psycopg2
 databases[aiosqlite]
 databases[asyncpg]
 pydantic-settings
