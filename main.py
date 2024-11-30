@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(employee_router, prefix="/api/v1/employee")
 
