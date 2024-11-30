@@ -36,7 +36,8 @@ def generate_qr_code(employee_data: EmployeeCreate):
     check_in_url = base_url.format(mobile=employee_data["mobile"])
 
     # data = json.dumps(minimal_employee_data, ensure_ascii=False)
-    file_path = f"/Users/lawrencechuang/Desktop/projects/promate-fd/back-end/promate/qrcodes/qr_code_{employee_data['mobile']}.png"
+    file_path = f"qrcodes/qr_code_{employee_data['mobile']}.png"
+    
 
     qr = qrcode.QRCode(
         version=1,
