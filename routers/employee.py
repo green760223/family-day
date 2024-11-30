@@ -37,6 +37,8 @@ def generate_qr_code(employee_data: EmployeeCreate):
 
     # data = json.dumps(minimal_employee_data, ensure_ascii=False)
     file_path = f"qrcodes/qr_code_{employee_data['mobile']}.png"
+    render_file_path = f"/opt/render/project/src/qrcodes/qr_code_{employee_data['mobile']}.png"
+    
     
 
     qr = qrcode.QRCode(
@@ -52,7 +54,7 @@ def generate_qr_code(employee_data: EmployeeCreate):
 
     # Create an image from the QR Code instance
     img = qr.make_image(fill_color="black", back_color="white")
-    img.save(file_path)
+    img.save(render_file_path)
 
     # Convert the image to a base64 string
     buffered = BytesIO()
