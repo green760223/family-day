@@ -18,6 +18,7 @@ services:
   name: pgbouncer
   runtime: docker
   plan: standard
+  region: singapore
   repo: https://github.com/render-oss/docker-pgbouncer
   envVars:
   - key: DATABASE_URL
