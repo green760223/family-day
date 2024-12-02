@@ -5,7 +5,6 @@ from io import BytesIO
 from typing import Annotated
 
 import pandas as pd
-import jwt
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
