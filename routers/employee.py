@@ -5,17 +5,22 @@ from io import BytesIO
 from typing import Annotated
 
 import pandas as pd
+import jwt
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import insert
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
-from security import authenticate_user, create_access_token, get_current_employee
+from security import authenticate_user, create_access_token, get_current_employee, verify_jwt_token, SECRET_KEY, ALGORITHM, credentials_exception
+from jose import ExpiredSignatureError, JWTError, jwt
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 # Create a QR code for the employee
@@ -212,3 +217,19 @@ async def login(employee: EmployeeIn):
     access_token = create_access_token(employee.mobile)
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/verify-token/{token}")
+async def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("==payload==", payload)
+        return payload
+    except ExpiredSignatureError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+    except JWTError as e:
+        raise credentials_exception from e

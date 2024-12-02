@@ -83,3 +83,17 @@ async def get_current_employee(token: Annotated[str, Depends(oauth2_scheme)]):
     if employee is None:
         raise credentials_exception
     return employee
+
+async def verify_jwt_token(token: Annotated[str, Depends(oauth2_scheme)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("==payload==", payload)
+        return payload
+    except ExpiredSignatureError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+    except JWTError as e:
+        raise credentials_exception from e
