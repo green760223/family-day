@@ -164,7 +164,13 @@ async def get_all_employees():
 
 
 @router.get("/{mobile}", response_model=EmployeeResponse)
-async def get_employee(mobile: str):
+async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depends(get_current_employee)]):
+    if mobile != current_employee.mobile:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to view this employee",
+        )
+        
     query = employee_table.select().where(employee_table.c.mobile == mobile)
     employee = await database.fetch_one(query)
 
