@@ -27,7 +27,7 @@ app.add_middleware(
     [
         "http://localhost:5173",
         "https://family-day-backend.onrender.com", 
-        "https://52f3-211-23-70-114.ngrok-free.app"    
+        "https://promate.legacy-taiwan.com"    
     ],
     allow_credentials=True,
     allow_methods=["*"],  
