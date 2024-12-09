@@ -6,7 +6,7 @@ from typing import Annotated
 
 import pandas as pd
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import insert
 
@@ -75,9 +75,10 @@ def generate_qr_code(employee_data: EmployeeCreate):
     status_code=status.HTTP_201_CREATED,
 )
 async def batch_create_employees(file: UploadFile):
-    # Read the uploaded CSV file
+    # Read the uploaded EXCEL file
     try:
-        df = pd.read_csv(file.file, dtype={"mobile": str})
+        df = pd.read_excel(file.file, dtype={"mobile": str})
+        print("==df==", df.head())
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Failed to process the uploaded file: {str(e)}"
@@ -86,6 +87,8 @@ async def batch_create_employees(file: UploadFile):
     # Check if the required columns are present
     required_columns = {
         "name",
+        "company",
+        "department",
         "mobile",
         "group",
         "family_employee",
@@ -100,13 +103,15 @@ async def batch_create_employees(file: UploadFile):
             detail=f"Missing required columns. Required: {required_columns}",
         )
 
-    # Read the CSV file and create a list of employee data
+    # Read the EXCEL file and create a list of employee data
     employees = []
     for _, row in df.iterrows():
         employee_data = {
             "name": row["name"],
             "mobile": row["mobile"],
             "group": row["group"],
+            "company": row["company"],
+            "department": row["department"],
             "family_employee": row["family_employee"],
             "family_infant": row["family_infant"],
             "family_child": row["family_child"],
@@ -114,7 +119,7 @@ async def batch_create_employees(file: UploadFile):
             "family_elderly": row["family_elderly"],
             "is_checked": False,
             "is_deleted": False,
-            "qr_code": generate_qr_code(row.to_dict()),
+            # "qr_code": generate_qr_code(row.to_dict()),
         }
         employees.append(employee_data)
 
@@ -134,6 +139,8 @@ async def create_employee(employee: EmployeeCreate):
     query = employee_table.insert().values(
         name=employee.name,
         mobile=employee.mobile,
+        department=employee.department,
+        company=employee.company,
         family_employee=employee.family_employee,
         family_infant=employee.family_infant,
         family_child=employee.family_child,
@@ -142,7 +149,6 @@ async def create_employee(employee: EmployeeCreate):
         group=employee.group,
         is_checked=employee.is_checked,
         is_deleted=employee.is_deleted,
-        qr_code=generate_qr_code(employee.model_dump()),
     )
     last_record_id = await database.execute(query)
 

@@ -7,6 +7,8 @@ from pydantic import BaseModel
 class EmployeeCreate(BaseModel):
     name: str
     mobile: str
+    department: str
+    company: str
     family_employee: int = 1
     family_infant: Optional[int] = None
     family_child: Optional[int] = None
@@ -15,14 +17,15 @@ class EmployeeCreate(BaseModel):
     group: Optional[int] = None
     is_checked: bool = False
     is_deleted: bool = False
-    qr_code: Optional[str] = None
 
 
 class EmployeeResponse(EmployeeCreate):
     id: int
     name: str
-    is_checked: bool
+    department: str
+    company: str
     mobile: str
+    is_checked: bool
     checked_in_time: Optional[datetime] = None
 
 
