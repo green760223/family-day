@@ -21,12 +21,8 @@ class EmployeeCreate(BaseModel):
 
 class EmployeeResponse(EmployeeCreate):
     id: int
-    name: str
     department: str
     company: str
-    mobile: str
-    is_checked: bool
-    checked_in_time: Optional[datetime] = None
 
 
 class EmployeeIn(BaseModel):

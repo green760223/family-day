@@ -169,6 +169,19 @@ async def get_all_employees():
     return [EmployeeResponse(**employee) for employee in employees]
 
 
+@router.get("/group/members/{group}", response_model=list[EmployeeResponse])
+async def get_team_members(group: int):
+    query = employee_table.select().where(employee_table.c.group == group)
+    employees = await database.fetch_all(query)
+
+    if not employees:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No employees found"
+        )
+
+    return [EmployeeResponse(**employee) for employee in employees]
+
+
 @router.get("/{mobile}", response_model=EmployeeResponse)
 async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depends(get_current_employee)]):
     if mobile != current_employee.mobile:
