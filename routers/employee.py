@@ -170,8 +170,8 @@ async def get_all_employees():
 
 
 @router.get("/group/members/{group}", response_model=list[EmployeeResponse])
-async def get_team_members(group: int):
-    query = employee_table.select().where(employee_table.c.group == str(group))
+async def get_team_members(group: str):
+    query = employee_table.select().where(employee_table.c.group == group)
     employees = await database.fetch_all(query)
 
     if not employees:
