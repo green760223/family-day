@@ -8,7 +8,7 @@ import pandas as pd
 import qrcode
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy import insert
+from sqlalchemy import insert, select, func
 
 from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
@@ -181,9 +181,30 @@ async def get_team_members(group: str):
 
     return [EmployeeResponse(**employee) for employee in employees]
 
+@router.get("/total/participants", response_model=dict)
+async def get_total_of_participants():
+    query = select(
+        func.sum(employee_table.c.family_employee).label("total_employee"),
+        func.sum(employee_table.c.family_infant).label("total_infant"),
+        func.sum(employee_table.c.family_child).label("total_child"),
+        func.sum(employee_table.c.family_adult).label("total_adult"),
+        func.sum(employee_table.c.family_elderly).label("total_elderly"),
+    ).where(employee_table.c.is_checked == True)
+
+    result = await database.fetch_one(query)
+
+    return {
+        "total_employee": result["total_employee"] or 0,
+        "total_infant": result["total_infant"] or 0,
+        "total_child": result["total_child"] or 0,
+        "total_adult": result["total_adult"] or 0,
+        "total_elderly": result["total_elderly"] or 0,
+    }
+
 
 @router.get("/{mobile}", response_model=EmployeeResponse)
 async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depends(get_current_employee)]):
+    print("===mobile===", mobile)
     if mobile != current_employee.mobile:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
