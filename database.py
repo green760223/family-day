@@ -20,7 +20,8 @@ employee_table = sqlalchemy.Table(
     sqlalchemy.Column("family_elderly", sqlalchemy.Integer, nullable=True),
     sqlalchemy.Column("group", sqlalchemy.String, nullable=True),
     sqlalchemy.Column("is_checked", sqlalchemy.Boolean, default=False),
-    sqlalchemy.Column("checked_in_time", sqlalchemy.DateTime, nullable=True),
+    # sqlalchemy.Column("checked_in_time", sqlalchemy.DateTime, nullable=True),
+    sqlalchemy.Column("checked_in_time", sqlalchemy.String, nullable=True),
     sqlalchemy.Column("is_deleted", sqlalchemy.Boolean, default=False),
 )
 
