@@ -247,7 +247,7 @@ async def check_in_employee(
     update_query = (
         employee_table.update()
         .where(employee_table.c.mobile == current_employee.mobile)
-        .values(is_checked=True, checked_in_time=datetime.now())
+        .values(is_checked=True, checked_in_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     )
     await database.execute(update_query)
 
