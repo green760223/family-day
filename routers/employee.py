@@ -14,6 +14,7 @@ from database import database, employee_table
 from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
 from security import authenticate_user, create_access_token, get_current_employee, SECRET_KEY, ALGORITHM, credentials_exception
 from jose import ExpiredSignatureError, JWTError, jwt
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -244,10 +245,13 @@ async def check_in_employee(
             status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found"
         )
 
+    tz = pytz.timezone("Asia/Taipei")
+    taipei_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+
     update_query = (
         employee_table.update()
         .where(employee_table.c.mobile == current_employee.mobile)
-        .values(is_checked=True, checked_in_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        .values(is_checked=True, checked_in_time=taipei_time)
     )
     await database.execute(update_query)
 
