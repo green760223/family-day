@@ -17,6 +17,11 @@ from jose import ExpiredSignatureError, JWTError, jwt
 import pytz
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 router = APIRouter()
 
@@ -137,6 +142,8 @@ async def batch_create_employees(file: UploadFile):
     status_code=status.HTTP_201_CREATED,
 )
 async def create_employee(employee: EmployeeCreate):
+    logger.info("Received request to create employee: %s", employee.model_dump_json())
+    
     query = employee_table.insert().values(
         name=employee.name,
         mobile=employee.mobile,
@@ -152,38 +159,54 @@ async def create_employee(employee: EmployeeCreate):
         is_deleted=employee.is_deleted,
     )
     last_record_id = await database.execute(query)
+    logger.info("Employee created successfully with name: %s", employee.name)
 
     return {**employee.model_dump(), "id": last_record_id}
 
 
 @router.get("/all-employees", response_model=list[EmployeeResponse])
 async def get_all_employees():
+    
+    logger.info("Received request to fetch all employees")
 
     query = employee_table.select()
     employees = await database.fetch_all(query)
 
     if not employees:
+        logger.warning("No employees found in the database")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No employees found"
         )
+        
+    logger.info(f"Successfully retrieved {len(employees)} employees")
 
     return [EmployeeResponse(**employee) for employee in employees]
 
 
 @router.get("/group/members/{group}", response_model=list[EmployeeResponse])
 async def get_team_members(group: str):
+    
+    logger.info(f"Received request to fetch members of group: {group}")
+    
     query = employee_table.select().where(employee_table.c.group == group)
     employees = await database.fetch_all(query)
 
     if not employees:
+        logger.warning(f"No employees found for group: {group}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="No employees found"
         )
+    
+    logger.info(f"Successfully retrieved {len(employees)} employees for group: {group}")
 
     return [EmployeeResponse(**employee) for employee in employees]
 
+
 @router.get("/total/participants", response_model=dict)
 async def get_total_of_participants():
+    
+    logger.info("Received request to calculate total participants")
+
     query = select(
         func.sum(employee_table.c.family_employee).label("total_employee"),
         func.sum(employee_table.c.family_infant).label("total_infant"),
@@ -193,20 +216,31 @@ async def get_total_of_participants():
     ).where(employee_table.c.is_checked == True)
 
     result = await database.fetch_one(query)
+    
+    logger.info(f"Query result: {result}")
+    
+    response = {
+            "total_employee": result["total_employee"] or 0,
+            "total_infant": result["total_infant"] or 0,
+            "total_child": result["total_child"] or 0,
+            "total_adult": result["total_adult"] or 0,
+            "total_elderly": result["total_elderly"] or 0,
+        }
 
-    return {
-        "total_employee": result["total_employee"] or 0,
-        "total_infant": result["total_infant"] or 0,
-        "total_child": result["total_child"] or 0,
-        "total_adult": result["total_adult"] or 0,
-        "total_elderly": result["total_elderly"] or 0,
-    }
+    logger.info(f"Response data: {response}")
+
+    return response
 
 
 @router.get("/{mobile}", response_model=EmployeeResponse)
 async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depends(get_current_employee)]):
-    print("===mobile===", mobile)
+    
+    logger.info(f"Received request to get employee with mobile: {mobile}")
+    
     if mobile != current_employee.mobile:
+        logger.warning(
+            f"Unauthorized access attempt by mobile: {current_employee.mobile} for employee: {mobile}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to view this employee",
@@ -216,9 +250,12 @@ async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depe
     employee = await database.fetch_one(query)
 
     if not employee:
+        logger.warning(f"Employee with mobile: {mobile} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found"
         )
+    
+    logger.info(f"Successfully retrieved employee with mobile: {mobile}")
 
     return EmployeeResponse(**employee)
 
@@ -229,7 +266,13 @@ async def check_in_employee(
     mobile: str,
     current_employee: Annotated[EmployeeIn, Depends(get_current_employee)],
 ):
+    
+    logger.info(f"Received check-in request for employee with mobile: {mobile}")
+    
     if mobile != current_employee.mobile:
+        logger.warning(
+            f"Unauthorized check-in attempt by mobile: {current_employee.mobile} for employee: {mobile}"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to check in this employee",
@@ -241,6 +284,7 @@ async def check_in_employee(
     employee = await database.fetch_one(query)
 
     if not employee:
+        logger.warning(f"Employee with mobile: {mobile} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found"
         )
@@ -256,41 +300,52 @@ async def check_in_employee(
     await database.execute(update_query)
 
     updated_employee = await database.fetch_one(query)
+    
+    logger.info(f"Employee with mobile: {mobile} checked in at {taipei_time}")
 
     return EmployeeResponse(**updated_employee)
 
 
 @router.post("/token")
 async def login(employee: EmployeeIn):
+    
+    logger.info(f"Received login request for mobile: {employee.mobile}")
+    
     employee = await authenticate_user(employee.mobile)
     access_token = create_access_token(employee.mobile)
-    print("==access_token==", access_token)
+    
+    logger.info(f"Generated access token for mobile: {employee.mobile}")
 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/token/verify")
 async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]):
-    print("==token==", token)
+    
+    logger.info("Received request to verify token")
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print("==payload==", payload)
+        logger.info(f"Token verified successfully: {payload}")
         return payload
     except ExpiredSignatureError as e:
+        logger.warning("Token has expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
     except JWTError as e:
+        logger.error(f"Invalid token: {str(e)}")
         raise credentials_exception from e
 
 
 @router.post("/notifications", response_model=NotificationResponse)
 async def create_notification(notification: NotificationCreate):
-    """
-    新增公告
-    """
+    
+    # Logging 請求數據
+    logger.info(f"Received notification creation request: {notification.model_dump_json()}")
+    
     tz = pytz.timezone("Asia/Taipei")
     taipei_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
     
@@ -301,20 +356,25 @@ async def create_notification(notification: NotificationCreate):
     )
     
     last_record_id = await database.execute(query)
+    logger.info(f"Notification created with ID: {last_record_id}")
     
-    return {
+    response = {
         "id": last_record_id,
         "title": notification.title,
         "message": notification.message,
-        "created_at": notification.created_at   # 確保返回 created_at
+        "created_at": taipei_time,
     }
+    
+    logger.info(f"Notification creation response: {response}")
+    
+    return response
 
 
 @router.get("/notifications/latest", response_model=Notification)
 async def get_latest_notification():
-    """
-    獲取最新公告
-    """
+    
+    logger.info("Received request to fetch the latest notification")
+    
     query = (
         notifications_table.select()
         .order_by(notifications_table.c.created_at.desc())
@@ -322,6 +382,10 @@ async def get_latest_notification():
     )
     result = await database.fetch_one(query)
     if not result:
+        logger.warning("No notifications found")
         raise HTTPException(status_code=404, detail="目前沒有任何公告")
+    
+    logger.info(f"Latest notification fetched: {result}")
+    
     return result
 
