@@ -217,8 +217,6 @@ async def get_total_of_participants():
 
     result = await database.fetch_one(query)
     
-    logger.info(f"Query result: {result}")
-    
     response = {
             "total_employee": result["total_employee"] or 0,
             "total_infant": result["total_infant"] or 0,
@@ -365,7 +363,7 @@ async def create_notification(notification: NotificationCreate):
         "created_at": taipei_time,
     }
     
-    logger.info(f"Notification creation response: {response}")
+    logger.info(f"Notification created successfully: {response}")
     
     return response
 
