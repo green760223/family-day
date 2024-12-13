@@ -28,7 +28,10 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-# Create a QR code for the employee
+'''
+# Generate QR code for an employee
+# POST /api/v1/generate-qr-code
+'''
 def generate_qr_code(employee_data: EmployeeCreate):
 
     # minimal_employee_data = {
@@ -75,6 +78,11 @@ def generate_qr_code(employee_data: EmployeeCreate):
     return img_str
 
 
+'''
+# Batch create employees
+# POST /api/v1/batch-create-employees
+# Request Body: EXCEL file with columns (name, company, department, mobile, group, family_employee, family_infant, family_child, family_adult, family_elderly)
+'''
 @router.post(
     "/batch-create-employees",
     response_model=str,
@@ -136,6 +144,11 @@ async def batch_create_employees(file: UploadFile):
     return "Batch employees data insert successfully"
 
 
+'''
+# Create an employee
+# POST /api/v1/create-employees
+# Request Body: {"name": "Employee Name", "mobile": "Employee Mobile", "department": "Employee Department", "company": "Employee Company", "group": "Employee Group", "family_employee": 1, "family_infant": 1, "family_child": 1, "family_adult": 1, "family_elderly": 1}
+'''
 @router.post(
     "/create-employees",
     response_model=EmployeeResponse,
@@ -164,6 +177,10 @@ async def create_employee(employee: EmployeeCreate):
     return {**employee.model_dump(), "id": last_record_id}
 
 
+'''
+# Get all employees
+# GET /api/v1/all-employees
+'''
 @router.get("/all-employees", response_model=list[EmployeeResponse])
 async def get_all_employees():
     
@@ -183,18 +200,30 @@ async def get_all_employees():
     return [EmployeeResponse(**employee) for employee in employees]
 
 
+'''
+# Get employees by group
+# GET /api/v1/group/members/{group}
+'''
 @router.get("/group/members/{group}", response_model=list[EmployeeResponse])
 async def get_team_members(group: str):
     
     logger.info(f"Received request to fetch members of group: {group}")
     
     query = employee_table.select().where(employee_table.c.group == group)
-    employees = await database.fetch_all(query)
+    
+    try:
+        employees = await database.fetch_all(query)
+    except Exception as e:
+        logger.error(f"Failed to fetch employees for group: {group}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch employees",
+        ) 
 
     if not employees:
         logger.warning(f"No employees found for group: {group}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No employees found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="No employees found for group {group}"
         )
     
     logger.info(f"Successfully retrieved {len(employees)} employees for group: {group}")
@@ -202,6 +231,13 @@ async def get_team_members(group: str):
     return [EmployeeResponse(**employee) for employee in employees]
 
 
+'''
+# Get the total number of participants
+# GET /api/v1/total/participants
+# Response Body: {"total_employee": 1, "total_infant": 1, "total_child": 1, "total_adult": 1, "total_elderly": 1}
+# Note: The response body should contain the total number of participants for each category
+# (employee, infant, child, adult, elderly)
+'''
 @router.get("/total/participants", response_model=dict)
 async def get_total_of_participants():
     
@@ -230,6 +266,11 @@ async def get_total_of_participants():
     return response
 
 
+'''
+# Get an employee by mobile
+# GET /api/v1/employee/{mobile}
+# Response Body: {"id": 1, "name": "Employee Name", "mobile": "Employee Mobile", "department": "Employee Department", "company": "Employee Company", "group": "Employee Group", "family_employee": 1, "family_infant": 1, "family_child": 1, "family_adult": 1, "family_elderly": 1, "is_checked": true, "is_deleted": false, "checked_in_time": "2021-08-01 12:00:00"}
+'''
 @router.get("/{mobile}", response_model=EmployeeResponse)
 async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depends(get_current_employee)]):
     
@@ -258,7 +299,11 @@ async def get_employee(mobile: str, current_employee: Annotated[EmployeeIn, Depe
     return EmployeeResponse(**employee)
 
 
+'''
 # Check in an employee
+# POST /api/v1/employee/{mobile}/check-in
+# Response Body: {"id": 1, "name": "Employee Name", "mobile": "Employee Mobile", "department": "Employee Department", "company": "Employee Company", "group": "Employee Group", "family_employee": 1, "family_infant": 1, "family_child": 1, "family_adult": 1, "family_elderly": 1, "is_checked": true, "is_deleted": false, "checked_in_time": "2021-08-01 12:00:00"}
+'''
 @router.post("/{mobile}/check-in", response_model=EmployeeResponse, status_code=200)
 async def check_in_employee(
     mobile: str,
@@ -304,6 +349,11 @@ async def check_in_employee(
     return EmployeeResponse(**updated_employee)
 
 
+'''
+# Generate JWT token for an employee to check in
+# POST /api/v1/employee/token
+# Request Body: {"mobile": "employee_mobile"}
+'''
 @router.post("/token")
 async def login(employee: EmployeeIn):
     
@@ -317,6 +367,10 @@ async def login(employee: EmployeeIn):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+'''
+# Verify the access token
+# POST /api/v1/token/verify
+'''
 @router.post("/token/verify")
 async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]):
     
@@ -338,6 +392,12 @@ async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception from e
 
 
+'''
+# Create a notification
+# POST /api/v1/notifications
+# Request Body: {"title": "Notification Title", "message": "Notification Message"}
+# Response Body: {"id": 1, "title": "Notification Title", "message": "Notification Message", "created_at": "2021-08-01 12:00:00"}
+'''
 @router.post("/notifications", response_model=NotificationResponse)
 async def create_notification(notification: NotificationCreate):
     
@@ -368,6 +428,11 @@ async def create_notification(notification: NotificationCreate):
     return response
 
 
+'''
+# Get the latest notification
+# GET /api/v1/notifications/latest
+# Response Body: {"id": 1, "title": "Notification Title", "message": "Notification Message", "created_at": "2021-08-01 12:00:00"}
+'''
 @router.get("/notifications/latest", response_model=Notification)
 async def get_latest_notification():
     
