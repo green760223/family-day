@@ -36,7 +36,7 @@ class Notification(BaseModel):
 
 
 class NotificationCreate(Notification):
-    id: int
+    # id: int
     created_at: Optional[str] = None
 
 class NotificationResponse(BaseModel):
