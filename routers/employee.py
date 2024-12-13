@@ -286,7 +286,7 @@ async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception from e
 
 
-@router.post("/notifications/", response_model=NotificationResponse)
+@router.post("/notifications", response_model=NotificationResponse)
 async def create_notification(notification: NotificationCreate):
     """
     新增公告
@@ -310,7 +310,7 @@ async def create_notification(notification: NotificationCreate):
     }
 
 
-@router.get("/notifications/latest/", response_model=Notification)
+@router.get("/notifications/latest", response_model=Notification)
 async def get_latest_notification():
     """
     獲取最新公告
