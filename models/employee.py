@@ -27,3 +27,20 @@ class EmployeeResponse(EmployeeCreate):
 
 class EmployeeIn(BaseModel):
     mobile: str
+
+
+class Notification(BaseModel):
+    title: str
+    message: str
+    
+
+
+class NotificationCreate(Notification):
+    id: int
+    created_at: Optional[str] = None
+
+class NotificationResponse(BaseModel):
+    id: int
+    title: str
+    message: str
+    created_at: str

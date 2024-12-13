@@ -25,6 +25,15 @@ employee_table = sqlalchemy.Table(
     sqlalchemy.Column("is_deleted", sqlalchemy.Boolean, default=False),
 )
 
+notifications_table = sqlalchemy.Table(
+    "notification",
+    metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+    sqlalchemy.Column("title", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("message", sqlalchemy.String, nullable=False),
+    sqlalchemy.Column("created_at", sqlalchemy.String, nullable=False),
+)
+
 connect_args = {"check_same_thread": False} if "sqlite" in config.DATABASE_URL else {}
 engine = sqlalchemy.create_engine(config.DATABASE_URL, connect_args=connect_args)
 

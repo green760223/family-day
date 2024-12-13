@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import insert, select, func
 
-from database import database, employee_table
-from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse
+from database import database, employee_table, notifications_table
+from models.employee import EmployeeCreate, EmployeeIn, EmployeeResponse, Notification, NotificationCreate, NotificationResponse
 from security import authenticate_user, create_access_token, get_current_employee, SECRET_KEY, ALGORITHM, credentials_exception
 from jose import ExpiredSignatureError, JWTError, jwt
 import pytz
@@ -284,4 +284,44 @@ async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]):
         ) from e
     except JWTError as e:
         raise credentials_exception from e
+
+
+@router.post("/notifications/", response_model=NotificationResponse)
+async def create_notification(notification: NotificationCreate):
+    """
+    新增公告
+    """
+    tz = pytz.timezone("Asia/Taipei")
+    taipei_time = datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")
+    
+    query = notifications_table.insert().values(
+        title=notification.title,
+        message=notification.message,
+        created_at=taipei_time
+    )
+    
+    last_record_id = await database.execute(query)
+    
+    return {
+        "id": last_record_id,
+        "title": notification.title,
+        "message": notification.message,
+        "created_at": notification.created_at   # 確保返回 created_at
+    }
+
+
+@router.get("/notifications/latest/", response_model=Notification)
+async def get_latest_notification():
+    """
+    獲取最新公告
+    """
+    query = (
+        notifications_table.select()
+        .order_by(notifications_table.c.created_at.desc())
+        .limit(1)
+    )
+    result = await database.fetch_one(query)
+    if not result:
+        raise HTTPException(status_code=404, detail="目前沒有任何公告")
+    return result
 
