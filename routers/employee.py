@@ -383,7 +383,7 @@ async def get_latest_notification():
         logger.warning("No notifications found")
         raise HTTPException(status_code=404, detail="目前沒有任何公告")
     
-    logger.info(f"Latest notification fetched: {result}")
+    logger.info(f"Latest notification fetched successfully")
     
     return result
 
